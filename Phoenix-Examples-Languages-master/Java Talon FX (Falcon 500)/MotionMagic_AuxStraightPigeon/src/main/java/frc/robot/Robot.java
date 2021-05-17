@@ -69,22 +69,29 @@ import com.ctre.phoenix.motorcontrol.StatusFrame;
 import com.ctre.phoenix.motorcontrol.TalonFXInvertType;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FollowerType;
+import com.ctre.phoenix.motorcontrol.InvertType;
 import com.ctre.phoenix.motorcontrol.DemandType;
 import com.ctre.phoenix.motorcontrol.TalonFXFeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.TalonFX;
 import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 
 public class Robot extends TimedRobot {
 	/** Hardware */
-	TalonFX _leftMaster = new TalonFX(2);
-	TalonFX _rightMaster = new TalonFX(1);
-	PigeonIMU _pidgey = new PigeonIMU(3);
+	WPI_TalonFX LeftDrive1 = new WPI_TalonFX(12);
+	WPI_TalonFX LeftDrive2 = new WPI_TalonFX(10);
+	WPI_TalonFX LeftDrive3 = new WPI_TalonFX(11);
+	WPI_TalonFX RightDrive1 = new WPI_TalonFX(5);
+	WPI_TalonFX RightDrive2 = new WPI_TalonFX(4);
+	WPI_TalonFX RightDrive3 = new WPI_TalonFX(6);
+	
+	PigeonIMU _pidgey = new PigeonIMU(0);
 	Joystick _gamepad = new Joystick(0);
 
 	/** Invert Directions for Left and Right */
-	TalonFXInvertType _leftInvert = TalonFXInvertType.CounterClockwise; //Same as invert = "false"
-	TalonFXInvertType _rightInvert = TalonFXInvertType.Clockwise; //Same as invert = "true"
+	TalonFXInvertType _leftInvert = TalonFXInvertType.Clockwise; //Same as invert = "false"
+	TalonFXInvertType _rightInvert = TalonFXInvertType.CounterClockwise; //Same as invert = "true"
 
 	/** Config Objects for motor controllers */
 	TalonFXConfiguration _leftConfig = new TalonFXConfiguration();
@@ -105,12 +112,36 @@ public class Robot extends TimedRobot {
 	@Override
 	public void robotInit() {
 		/* Set Neutral Mode */
-		_leftMaster.setNeutralMode(NeutralMode.Brake);
-		_rightMaster.setNeutralMode(NeutralMode.Brake);
+		LeftDrive1.setNeutralMode(NeutralMode.Brake);
+		RightDrive1.setNeutralMode(NeutralMode.Brake);
+		LeftDrive2.setNeutralMode(NeutralMode.Brake);
+		RightDrive2.setNeutralMode(NeutralMode.Brake);
+		LeftDrive3.setNeutralMode(NeutralMode.Brake);
+		RightDrive3.setNeutralMode(NeutralMode.Brake);
 
 		/* Configure output and sensor direction */
-		_leftMaster.setInverted(_leftInvert);
-		_rightMaster.setInverted(_rightInvert);
+		LeftDrive1.setInverted(_leftInvert);
+		RightDrive1.setInverted(_rightInvert);
+		LeftDrive2.setInverted(_leftInvert);
+		RightDrive2.setInverted(_rightInvert);
+		LeftDrive3.setInverted(_leftInvert);
+		RightDrive3.setInverted(_rightInvert);
+
+		//follow master (may have to move)
+		LeftDrive2.follow(LeftDrive1);
+		RightDrive2.follow(RightDrive1);
+
+		LeftDrive3.follow(LeftDrive1);
+		RightDrive3.follow(RightDrive1);
+
+
+		LeftDrive2.setInverted(InvertType.FollowMaster);
+		RightDrive2.setInverted(InvertType.FollowMaster);
+		
+		LeftDrive3.setInverted(InvertType.FollowMaster);
+		RightDrive3.setInverted(InvertType.FollowMaster);
+
+
 		/*
 		 * Talon FX does not need sensor phase set for its integrated sensor
 		 * This is because it will always be correct if the selected feedback device is integrated sensor (default value)
@@ -134,7 +165,7 @@ public class Robot extends TimedRobot {
 		_leftConfig.primaryPID.selectedFeedbackSensor = TalonFXFeedbackDevice.IntegratedSensor.toFeedbackDevice(); //Local Feedback Source
 
 		/* Configure the Remote (Left) Talon's selected sensor as a remote sensor for the right Talon */
-		_rightConfig.remoteFilter0.remoteSensorDeviceID = _leftMaster.getDeviceID(); //Device ID of Remote Source
+		_rightConfig.remoteFilter0.remoteSensorDeviceID = LeftDrive1.getDeviceID(); //Device ID of Remote Source
 		_rightConfig.remoteFilter0.remoteSensorSource = RemoteSensorSource.TalonFX_SelectedSensor; //Remote Source Type
 		
 		/* Now that the Left sensor can be used by the master Talon,
@@ -192,25 +223,29 @@ public class Robot extends TimedRobot {
 
 
 		/* APPLY the config settings */
-		_leftMaster.configAllSettings(_leftConfig);
-		_rightMaster.configAllSettings(_rightConfig);
+		LeftDrive1.configAllSettings(_leftConfig);
+		RightDrive1.configAllSettings(_rightConfig);
 
 
 		/* Set status frame periods to ensure we don't have stale data */
 		/* These aren't configs (they're not persistant) so we can set these after the configs.  */
-		_rightMaster.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, Constants.kTimeoutMs);
-		_rightMaster.setStatusFramePeriod(StatusFrame.Status_13_Base_PIDF0, 20, Constants.kTimeoutMs);
-		_rightMaster.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, Constants.kTimeoutMs);
-		_rightMaster.setStatusFramePeriod(StatusFrame.Status_10_Targets, 10, Constants.kTimeoutMs);
-		_leftMaster.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, Constants.kTimeoutMs);
+		RightDrive1.setStatusFramePeriod(StatusFrame.Status_12_Feedback1, 20, Constants.kTimeoutMs);
+		RightDrive1.setStatusFramePeriod(StatusFrame.Status_13_Base_PIDF0, 20, Constants.kTimeoutMs);
+		RightDrive1.setStatusFramePeriod(StatusFrame.Status_14_Turn_PIDF1, 20, Constants.kTimeoutMs);
+		RightDrive1.setStatusFramePeriod(StatusFrame.Status_10_Targets, 10, Constants.kTimeoutMs);
+		LeftDrive1.setStatusFramePeriod(StatusFrame.Status_2_Feedback0, 5, Constants.kTimeoutMs);
 		_pidgey.setStatusFramePeriod(PigeonIMU_StatusFrame.CondStatus_9_SixDeg_YPR , 5, Constants.kTimeoutMs);
 	}
 
 	@Override
 	public void teleopInit(){
 		/* Disable all motor controllers */
-		_rightMaster.set(ControlMode.PercentOutput, 0);
-		_leftMaster.set(ControlMode.PercentOutput, 0);
+		LeftDrive1.set(ControlMode.PercentOutput, 0);
+		RightDrive1.set(ControlMode.PercentOutput, 0);
+		LeftDrive2.set(ControlMode.PercentOutput, 0);
+		RightDrive2.set(ControlMode.PercentOutput, 0);
+		LeftDrive3.set(ControlMode.PercentOutput, 0);
+		RightDrive3.set(ControlMode.PercentOutput, 0);
 		
 		/* Initialize */
 		_firstCall = true;
@@ -221,31 +256,47 @@ public class Robot extends TimedRobot {
 	@Override
 	public void teleopPeriodic() {
 		/* Gamepad processing */
-		double forward = -1 * _gamepad.getY();
-		double turn = _gamepad.getTwist();
+		double forward = -1 * _gamepad.getRawAxis(1);
+		double turn = _gamepad.getRawAxis(4);
 		forward = Deadband(forward);
 		turn = Deadband(turn);
+
+
+				//follow master (may have to move)
+				LeftDrive2.follow(LeftDrive1);
+				RightDrive2.follow(RightDrive1);
+		
+				LeftDrive3.follow(LeftDrive1);
+				RightDrive3.follow(RightDrive1);
+		
+		
+				LeftDrive2.setInverted(InvertType.FollowMaster);
+				RightDrive2.setInverted(InvertType.FollowMaster);
+				
+				LeftDrive3.setInverted(InvertType.FollowMaster);
+				RightDrive3.setInverted(InvertType.FollowMaster);
+
 	
 		/* Button processing for state toggle and sensor zeroing */
 		getButtons(_currentBtns, _gamepad);
 		if(_currentBtns[2] && !_previous_currentBtns[2]){
 			_state = !_state; 		// Toggle state
 			_firstCall = true;		// State change, do first call operation
-			_targetAngle = _rightMaster.getSelectedSensorPosition(1);
+			_targetAngle = RightDrive1.getSelectedSensorPosition(1);
 		}else if (_currentBtns[1] && !_previous_currentBtns[1]) {
 			zeroSensors();			// Zero Sensors
 		}
 		if(_currentBtns[5] && !_previous_currentBtns[5]) {
 			_smoothing--; // Decrement smoothing
 			if(_smoothing < 0) _smoothing = 0; // Cap smoothing
-			_rightMaster.configMotionSCurveStrength(_smoothing);
+			RightDrive1.configMotionSCurveStrength(_smoothing);
 
 			System.out.println("Smoothing value is: " + _smoothing);
 		}
 		if(_currentBtns[6] && !_previous_currentBtns[6]) {
 			_smoothing++; // Increment smoothing
 			if(_smoothing > 8) _smoothing = 8; // Cap smoothing
-			_rightMaster.configMotionSCurveStrength(_smoothing);
+			RightDrive1.configMotionSCurveStrength(_smoothing);
 			
 			System.out.println("Smoothing value is: " + _smoothing);
 		}
@@ -255,8 +306,8 @@ public class Robot extends TimedRobot {
 			if (_firstCall)
 				System.out.println("This is Arcade Drive.\n");
 			
-			_leftMaster.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
-			_rightMaster.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
+			LeftDrive1.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
+			RightDrive1.set(ControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 		}else{
 			if (_firstCall) {
 				System.out.println("This is Motion Magic with the Auxiliary PID using the Pigeon yaw.");
@@ -264,8 +315,8 @@ public class Robot extends TimedRobot {
 				zeroDistance();
 				
 				/* Determine which slot affects which PID */
-				_rightMaster.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
-				_rightMaster.selectProfileSlot(Constants.kSlot_Turning, Constants.PID_TURN);
+				RightDrive1.selectProfileSlot(Constants.kSlot_Distanc, Constants.PID_PRIMARY);
+				RightDrive1.selectProfileSlot(Constants.kSlot_Turning, Constants.PID_TURN);
 			}
 			
 			/* Calculate targets from gamepad inputs */
@@ -273,16 +324,16 @@ public class Robot extends TimedRobot {
 			double target_turn = _targetAngle;
 			
 			/* Configured for MotionMagic on Integrated Encoders' Sum and Auxiliary PID on Pigeon */
-			_rightMaster.set(ControlMode.MotionMagic, target_sensorUnits, DemandType.AuxPID, target_turn);
-			_leftMaster.follow(_rightMaster, FollowerType.AuxOutput1);
+			RightDrive1.set(ControlMode.MotionMagic, target_sensorUnits, DemandType.AuxPID, target_turn);
+			LeftDrive1.follow(RightDrive1, FollowerType.AuxOutput1);
 		}
 		_firstCall = false;
 	}
 	
 	/** Zero all sensors, both Talons and Pigeon */
 	void zeroSensors() {
-		_leftMaster.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
-		_rightMaster.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
+		LeftDrive1.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
+		RightDrive1.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
 		_pidgey.setYaw(0, Constants.kTimeoutMs);
 		_pidgey.setAccumZAngle(0, Constants.kTimeoutMs);
 		System.out.println("[Integrated Encoders + Pigeon] All sensors are zeroed.\n");
@@ -290,8 +341,8 @@ public class Robot extends TimedRobot {
 	
 	/** Zero Integrated Encoders, used to reset position when initializing Motion Magic */
 	void zeroDistance(){
-		_leftMaster.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
-		_rightMaster.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
+		LeftDrive1.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
+		RightDrive1.getSensorCollection().setIntegratedSensorPosition(0, Constants.kTimeoutMs);
 		System.out.println("[Integrated Encoders] All encoders are zeroed.\n");
 	}
 	
@@ -352,17 +403,13 @@ public class Robot extends TimedRobot {
 			/* 
 				If master is inverted, that means the integrated sensor
 				will be negative in the forward direction.
-
 				If master is inverted, the final sum/diff result will also be inverted.
 				This is how Talon FX corrects the sensor phase when inverting 
 				the motor direction.  This inversion applies to the *Selected Sensor*,
 				not the native value.
-
 				Will a sensor sum or difference give us a positive total magnitude?
-
 				Remember the Master is one side of your drivetrain distance and 
 				Auxiliary is the other side's distance.
-
 					Phase | Term 0   |   Term 1  | Result
 				Sum:  -1 *((-)Master + (+)Aux   )| NOT OK, will cancel each other out
 				Diff: -1 *((-)Master - (+)Aux   )| OK - This is what we want, magnitude will be correct and positive.

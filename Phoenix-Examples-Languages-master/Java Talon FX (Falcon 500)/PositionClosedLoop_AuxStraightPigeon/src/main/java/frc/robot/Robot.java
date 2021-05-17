@@ -81,12 +81,13 @@ import com.ctre.phoenix.sensors.PigeonImuJNI;
 
 public class Robot extends TimedRobot {
 	/** Hardware */
-	WPI_TalonFX LeftDrive1 = new WPI_TalonFX(12);
-	WPI_TalonFX LeftDrive2 = new WPI_TalonFX(10);
-	WPI_TalonFX LeftDrive3 = new WPI_TalonFX(11);
-	WPI_TalonFX RightDrive1 = new WPI_TalonFX(5);
-	WPI_TalonFX RightDrive2 = new WPI_TalonFX(4);
-	WPI_TalonFX RightDrive3 = new WPI_TalonFX(6);
+	
+
+	TalonFX LeftDrive1 = new TalonFX(3);
+	TalonFX LeftDrive2 = new TalonFX(4);
+
+	TalonFX RightDrive1 = new TalonFX(6);
+	TalonFX RightDrive2 = new TalonFX(5);
 
 	PigeonIMU _pidgey = new PigeonIMU(0);
 	Joystick _gamepad = new Joystick(0);
@@ -122,16 +123,14 @@ public class Robot extends TimedRobot {
 		RightDrive1.set(ControlMode.PercentOutput, 0);
 		LeftDrive2.set(ControlMode.PercentOutput, 0);
 		RightDrive2.set(ControlMode.PercentOutput, 0);
-		LeftDrive3.set(ControlMode.PercentOutput, 0);
-		RightDrive3.set(ControlMode.PercentOutput, 0);
+		
 
 		/* Factory Default all hardware to prevent unexpected behaviour */
 		LeftDrive1.configFactoryDefault();
 		RightDrive1.configFactoryDefault();
 		LeftDrive2.configFactoryDefault();
 		RightDrive2.configFactoryDefault();
-		LeftDrive3.configFactoryDefault();
-		RightDrive3.configFactoryDefault();
+		
 
 		_pidgey.configFactoryDefault();
 		
@@ -140,21 +139,17 @@ public class Robot extends TimedRobot {
 		RightDrive1.setNeutralMode(NeutralMode.Brake);
 		LeftDrive2.setNeutralMode(NeutralMode.Brake);
 		RightDrive2.setNeutralMode(NeutralMode.Brake);
-		LeftDrive3.setNeutralMode(NeutralMode.Brake);
-		RightDrive3.setNeutralMode(NeutralMode.Brake);
+		
 
 		LeftDrive2.follow(LeftDrive1);
 		RightDrive2.follow(RightDrive1);
 
-		LeftDrive3.follow(LeftDrive1);
-		RightDrive3.follow(RightDrive1);
+	
 
 
 		LeftDrive2.setInverted(InvertType.FollowMaster);
 		RightDrive2.setInverted(InvertType.FollowMaster);
 		
-		LeftDrive3.setInverted(InvertType.FollowMaster);
-		RightDrive3.setInverted(InvertType.FollowMaster);
 		
 		/** Feedback Sensor Configuration */
 		
@@ -220,8 +215,7 @@ public class Robot extends TimedRobot {
 		RightDrive1.setInverted(_rightInvert);
 		LeftDrive2.setInverted(_leftInvert);
 		RightDrive2.setInverted(_rightInvert);
-		LeftDrive3.setInverted(_leftInvert);
-		RightDrive3.setInverted(_rightInvert);
+	
 
 		/*
 		 * Talon FX does not need sensor phase set for its integrated sensor
@@ -271,6 +265,8 @@ public class Robot extends TimedRobot {
 			LeftDrive1.set(TalonFXControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, +turn);
 			RightDrive1.set(TalonFXControlMode.PercentOutput, forward, DemandType.ArbitraryFeedForward, -turn);
 
+			SmartDashboard.putNumber("turn target",RightDrive1.getClosedLoopTarget(1));
+
 			System.out.println();
 
 		}else{
@@ -302,6 +298,8 @@ public class Robot extends TimedRobot {
 		
 			System.out.println("angle is "+  ypr[0]);
 
+			SmartDashboard.putNumber("turn target",RightDrive1.getClosedLoopTarget(1));
+			
 
 		}
 		_firstCall = false;
